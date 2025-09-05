@@ -1,0 +1,47 @@
+{
+  "name": "r6-apply",
+  "version": "1.0.0",
+  "description": "Korean apartment subscription data crawling and visualization app",
+  "main": "server.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "nodemon src/server.js",
+    "client:dev": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "start": "node src/server.js",
+    "test": "jest",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["apartment", "subscription", "crawling", "korea", "real-estate"],
+  "author": "BanaPapa",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "dotenv": "^16.3.1",
+    "axios": "^1.5.0",
+    "cheerio": "^1.0.0-rc.12",
+    "puppeteer": "^21.1.1",
+    "iconv-lite": "^0.6.3",
+    "node-cron": "^3.0.2",
+    "pg": "^8.11.3",
+    "redis": "^4.6.8",
+    "bull": "^4.11.3",
+    "winston": "^3.10.0",
+    "joi": "^17.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "concurrently": "^8.2.1",
+    "jest": "^29.6.4",
+    "eslint": "^8.48.0",
+    "@types/node": "^20.5.8",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

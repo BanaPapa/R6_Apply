@@ -56,3 +56,15 @@ temp/
 # Cache
 .cache/
 .parcel-cache/
+.gstack/
+
+# Local exploration / probe scripts (로컬 분석용 스크래치 — 커밋 제외)
+_probe_*.js
+_explore_site.js
+_regioncheck.js
+check_data_availability.js
+check_old_data.js
+check_recent_data.js
+find-earliest-data.js
+scan-by-curl.sh
+simple-server.js

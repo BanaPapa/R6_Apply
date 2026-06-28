@@ -37,8 +37,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function parseArgs(argv) {
   const a = { from: '201501', to: null, skipOld: false };
   for (let i = 0; i < argv.length; i += 1) {
-    if (argv[i] === '--from') a.from = argv[++i].replace(/[^\d]/g, '').slice(0, 6);
-    else if (argv[i] === '--to') a.to = argv[++i].replace(/[^\d]/g, '').slice(0, 6);
+    if (argv[i] === '--from') a.from = (argv[++i] ?? '').replace(/[^\d]/g, '').slice(0, 6) || a.from;
+    else if (argv[i] === '--to') a.to = (argv[++i] ?? '').replace(/[^\d]/g, '').slice(0, 6) || null;
     else if (argv[i] === '--skip-old') a.skipOld = true;
   }
   if (!a.to) {
@@ -163,8 +163,10 @@ async function fetchDetailSupply(hmno) {
     if (t.length < 2500) return null;
     const date = (t.match(/모집공고일\s+(20\d{2}-\d{2}-\d{2})/) || [])[1];
     if (!date) return null;
-    const name = (t.match(/주요정보\s+([가-힣A-Za-z0-9()·\-_. ]{2,40}?)\s+공급위치/) || [])[1] || '';
-    const loc = (t.match(/공급위치\s+([가-힣A-Za-z0-9()·\-_. ]{4,60}?)\s+공급규모/) || [])[1] || '';
+    // 전각문자(ＡＢ１５, （）) 포함, "입주자모집공고 주요정보" 중복 prefix 건너뜀
+    const nameRaw = (t.match(/주요정보\s+(?:입주자모집공고\s+주요정보\s+)?(.{2,60}?)\s+공급위치/) || [])[1] || '';
+    const name = nameRaw.replace(/^입주자모집공고\s+주요정보\s+/, '').trim();
+    const loc = (t.match(/공급위치\s+(.{4,80}?)\s+공급규모/) || [])[1]?.trim() || '';
     const scale = num((t.match(/공급규모\s+([\d,]+)\s*세대/) || [])[1]);
     return { hmno, date, name: name.trim(), loc: loc.trim(), scale };
   } catch { return null; }

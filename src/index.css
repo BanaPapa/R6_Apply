@@ -4292,3 +4292,80 @@ thead .col-resize-handle:active {
 .result-table td.rate-mid  { color: #d97706; font-weight: 600; }
 .result-table td.rate-low  { color: #2563eb; font-weight: 600; }
 .result-table td.rate-zero { color: var(--muted, #94a3b8); }
+
+/* ── 내보내기 확인 모달 (ExportConfirmModal) ─────────────────── */
+.export-confirm-modal {
+  width: min(420px, 92vw);
+  padding: 32px 28px 24px;
+  position: relative;
+}
+.export-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fg);
+  margin: 0 0 4px;
+}
+.export-format-label {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 20px;
+}
+.export-opt-section {
+  margin-bottom: 20px;
+}
+.export-opt-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 8px;
+}
+.export-opt-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.export-opt-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg-2);
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color .15s, background .15s;
+}
+.export-opt-btn input[type="radio"] { accent-color: var(--blue); }
+.export-opt-btn.active {
+  border-color: var(--blue);
+  background: var(--blue-dim);
+  color: var(--fg);
+}
+.export-opt-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+}
+.export-opt-note {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+.export-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.export-summary {
+  flex: 1;
+  font-size: 13px;
+  color: var(--muted);
+}
+.export-summary b { color: var(--fg); }

@@ -10,7 +10,12 @@ import {
 } from '../types';
 import { toApplyhomeRegion } from '../services/kbland';
 import { useApplySlots } from '../hooks/useApplySlots';
-import { exportApartmentsExcel, exportApartmentsJSON, buildExportBaseName } from '../services/exportExcel';
+import {
+  exportApartmentsExcel, exportApartmentsJSON,
+  exportApartmentsMarkdown, downloadMarkdown,
+  buildExportBaseName,
+} from '../services/exportExcel';
+import { ExportConfirmModal, ExportFormat, ExportOptions } from './ExportConfirmModal';
 
 const onlyApplyhomeRegions = (r: RegionItem) => !!toApplyhomeRegion(r.code);
 const ALL_REGION: RegionItem = { code: 'ALL', name: '전체', level: 1 };
@@ -85,6 +90,7 @@ export function ApplyModule({ userId = null }: ApplyModuleProps) {
   const [slotModalOpen, setSlotModalOpen] = useState(false);
   const [collecting, setCollecting] = useState(false);
   const [collectProgress, setCollectProgress] = useState('');
+  const [exportConfirm, setExportConfirm] = useState<ExportFormat | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [collectStatus, setCollectStatus] = useState<CollectStatus>('counting');
@@ -279,35 +285,46 @@ export function ApplyModule({ userId = null }: ApplyModuleProps) {
   const busy = loading || collecting;
   const savedCount = slots.slots.filter(Boolean).length;
 
-  const onExportExcel = useCallback(async () => {
+  const performExport = useCallback(async ({ format, scope }: ExportOptions) => {
+    setExportConfirm(null);
     setCollecting(true);
     try {
-      const { meta, apartments: all, count, capped } = await collectAll();
-      if (all.length === 0) return;
-      exportApartmentsExcel(all, buildExportBaseName(meta, all.length));
-      if (capped) alert(`결과가 많아 상위 ${all.length.toLocaleString()}건만 내보냈습니다 (전체 ${count.toLocaleString()}건).`);
-    } catch (err) {
-      console.error('Excel 내보내기 실패:', err);
-      alert('내보내기에 실패했습니다.');
-    } finally {
-      setCollecting(false);
-    }
-  }, [collectAll]);
+      let all: Apartment[];
+      let meta: ApplySearchMeta;
+      let count: number;
+      let capped = false;
 
-  const onExportJSON = useCallback(async () => {
-    setCollecting(true);
-    try {
-      const { meta, apartments: all, capped, count } = await collectAll();
+      if (scope === 'current') {
+        all = apartments;
+        meta = activeMeta ?? currentMeta();
+        count = all.length;
+      } else {
+        const res = await collectAll();
+        all = res.apartments;
+        meta = res.meta;
+        count = res.count;
+        capped = res.capped;
+      }
+
       if (all.length === 0) return;
-      exportApartmentsJSON(all, buildExportBaseName(meta, all.length));
+      const base = buildExportBaseName(meta, all.length);
+
+      if (format === 'excel') {
+        exportApartmentsExcel(all, base);
+      } else if (format === 'json') {
+        exportApartmentsJSON(all, base);
+      } else {
+        downloadMarkdown(exportApartmentsMarkdown(all, meta), base);
+      }
+
       if (capped) alert(`결과가 많아 상위 ${all.length.toLocaleString()}건만 내보냈습니다 (전체 ${count.toLocaleString()}건).`);
     } catch (err) {
-      console.error('JSON 내보내기 실패:', err);
+      console.error('내보내기 실패:', err);
       alert('내보내기에 실패했습니다.');
     } finally {
       setCollecting(false);
     }
-  }, [collectAll]);
+  }, [apartments, activeMeta, currentMeta, collectAll]);
 
   const handleSaveSlot = useCallback(async () => {
     setCollecting(true);
@@ -498,11 +515,14 @@ export function ApplyModule({ userId = null }: ApplyModuleProps) {
                       </span>
                     </div>
                     <div className="result-actions">
-                      <button className="btn-outline btn-sm" onClick={onExportExcel} disabled={!hasResults || busy}>
-                        {collecting ? (collectProgress ? `수집 ${collectProgress}…` : '수집 중…') : 'Excel 내보내기'}
+                      <button className="btn-outline btn-sm" onClick={() => setExportConfirm('excel')} disabled={!hasResults || busy}>
+                        {collecting && collectProgress ? `수집 ${collectProgress}…` : collecting ? '수집 중…' : 'Excel 내보내기'}
                       </button>
-                      <button className="btn-outline btn-sm" onClick={onExportJSON} disabled={!hasResults || busy}>
+                      <button className="btn-outline btn-sm" onClick={() => setExportConfirm('json')} disabled={!hasResults || busy}>
                         JSON 내보내기
+                      </button>
+                      <button className="btn-outline btn-sm" onClick={() => setExportConfirm('md')} disabled={!hasResults || busy}>
+                        MD 내보내기
                       </button>
                       <button className="btn-outline btn-sm" onClick={handleSaveSlot} disabled={!hasResults || busy} title="현재 결과를 슬롯에 저장">
                         슬롯 저장
@@ -599,6 +619,16 @@ export function ApplyModule({ userId = null }: ApplyModuleProps) {
           </div>
         </main>
       </div>
+
+      {exportConfirm && (
+        <ExportConfirmModal
+          format={exportConfirm}
+          currentCount={apartments.length}
+          totalCount={pagination?.totalCount ?? apartments.length}
+          onConfirm={performExport}
+          onClose={() => setExportConfirm(null)}
+        />
+      )}
 
       {modalOpen && (
         <ApplyCrawlModal

@@ -112,6 +112,36 @@ export function exportSlotsExcel(slots: ApplySavedSlot[]): void {
   downloadWorkbook(wb, `apply_slots_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 
+export function exportApartmentsMarkdown(rows: ApplyApartment[], meta?: ApplySearchMeta): string {
+  const header = [
+    `# 청약 경쟁률 조회 결과`,
+    `지역: ${meta?.regionName || '전체'} | 기간: ${meta ? `${ym(meta.startDate)}~${ym(meta.endDate)}` : '-'} | 건수: ${rows.length.toLocaleString()}건`,
+    '',
+    '| 번호 | 지역 | 단지명 | 시공사 | 모집공고일 | 청약기간 | 총세대수 | 1순위접수 | 평균경쟁률 | 최고경쟁률 | 청약결과 |',
+    '|------|------|--------|--------|-----------|---------|---------|---------|-----------|-----------|---------|',
+  ].join('\n');
+
+  const dataRows = rows
+    .map((a, i) => {
+      const avg = a.averageCompetitionRate != null ? `${a.averageCompetitionRate.toFixed(2)} : 1` : '-';
+      const max = a.maxCompetitionRate != null ? `${a.maxCompetitionRate.toFixed(2)} : 1` : '-';
+      return `| ${i + 1} | ${a.region || '-'} | ${a.houseName || '-'} | ${a.constructor || '-'} | ${a.noticeDate || '-'} | ${a.subscriptionPeriod || '-'} | ${a.totalUnits || '-'} | ${a.firstRoundApplications || '-'} | ${avg} | ${max} | ${a.subscriptionResult || '-'} |`;
+    })
+    .join('\n');
+
+  return `${header}\n${dataRows}\n`;
+}
+
+export function downloadMarkdown(content: string, filenameBase?: string): void {
+  const blob = new Blob([content], { type: 'text/markdown; charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${filenameBase ? sanitizeFileName(filenameBase) : `apply_${new Date().toISOString().slice(0, 10)}`}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function exportApartmentsJSON(rows: ApplyApartment[], filenameBase?: string): void {
   if (rows.length === 0) return;
   const blob = new Blob([JSON.stringify(rows, null, 2)], { type: 'application/json' });

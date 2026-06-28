@@ -21,7 +21,7 @@
  */
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { supabaseAdmin } from '../lib/supabase/serverClient.mjs';
+import { getSupabaseAdmin } from '../lib/supabase/serverClient.mjs';
 import {
   isOdcloudEnabled,
   fetchSupplyMonth,
@@ -68,7 +68,7 @@ const num = (v) => { const n = parseInt(digits(v), 10); return Number.isFinite(n
 // ── upsert helpers ────────────────────────────────────
 async function upsertAnnouncements(rows) {
   if (!rows.length) return;
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from('apply_announcements')
     .upsert(rows, { onConflict: 'house_manage_no,pblanc_no' });
   if (error) throw new Error(`announcements upsert: ${error.message}`);
@@ -77,7 +77,7 @@ async function upsertAnnouncements(rows) {
 async function upsertSnapshots(rows, snapshotDate) {
   if (!rows.length) return;
   const snaps = rows.map((s) => ({ ...s, snapshot_date: snapshotDate }));
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from('apply_competition_snapshots')
     .upsert(snaps, { onConflict: 'house_manage_no,pblanc_no,snapshot_date' });
   if (error) throw new Error(`snapshots upsert: ${error.message}`);
@@ -218,7 +218,7 @@ async function backfillApplyhomeYear(year, untilYM) {
 // ── main ──────────────────────────────────────────────
 (async () => {
   const args = parseArgs(process.argv.slice(2));
-  if (!supabaseAdmin) {
+  if (!getSupabaseAdmin()) {
     console.error('✗ Supabase 미설정 — .env 에 SUPABASE_URL(또는 VITE_SUPABASE_URL) + SUPABASE_SERVICE_ROLE_KEY 필요');
     process.exit(1);
   }
